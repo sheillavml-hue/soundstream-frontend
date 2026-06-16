@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { subscribe, getStatus } from "../services/api";
 
 function Subscription() {
-  // --- HANYA MENAMBAHKAN INI: Mengubah loading biasa menjadi loading per-tier ---
-  const [loadingTier, setLoadingTier] = useState(null);
-  const [result, setResult] = useState(null); // { success: boolean, message: string }
+  const [loadingTier, setLoadingTier] = useState(null); 
+  const [result, setResult] = useState(null); 
   
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -55,7 +54,7 @@ function Subscription() {
       period: "/ mo",
       desc: "Music enthusiasts who value sound quality and personalization.",
       buttonText: "Go Premium",
-      popular: true, // Most Popular / Recommended
+      popular: true, 
       benefits: [
         "Everything in Plus, and:",
         "Lossless / Hi-Fi audio quality (up to 320 kbps).",
@@ -89,7 +88,6 @@ function Subscription() {
   ];
 
   const handleSubscribe = async (selectedTier) => {
-    // --- HANYA MENGUBAH SETTINGAN LOADING KE TIER YANG DIPILIH ---
     setLoadingTier(selectedTier);
     setResult(null);
 
@@ -110,22 +108,20 @@ function Subscription() {
         return;
       }
 
-      // --- HANYA MENAMBAHKAN JARING PENGAMAN: BIAR TIDAK MACET PAS AWS SUSPEND ---
       let data;
       try {
         data = await subscribe(user.userId, user.email, selectedTier);
       } catch (awsError) {
-        console.warn("AWS Terkunci, mengaktifkan mode bypass simulasi:", awsError);
-        data = { success: true, isBackupMode: true }; 
+        console.warn("AWS Terkunci, mengaktifkan mode bypass otomatis:", awsError);
+        data = { success: true, isBackupMode: true };
       }
       
       if (data.success) {
-        // Modifikasi teks notifikasi sedikit agar tahu kalau lagi mode bypass demo
-        const msg = data.isBackupMode 
-          ? `🎉 [Demo Mode] Activation successful for ${selectedTier} tier!` 
+        const successMsg = data.isBackupMode 
+          ? `🎉 [Demo Mode] Activation success for ${selectedTier} tier!`
           : `Payment successful! Activating ${selectedTier} tier...`;
 
-        setResult({ success: true, message: msg });
+        setResult({ success: true, message: successMsg });
         
         localStorage.setItem("active_subscription", selectedTier);
         localStorage.setItem("subscription_status", "active");
@@ -156,7 +152,6 @@ function Subscription() {
           }));
 
           alert("⏱️ Masa uji coba premium 5 detik Anda telah habis! Sistem mengembalikan Anda ke Free Tier.");
-          
           window.location.reload(); 
         }, 6000);
 
@@ -166,7 +161,6 @@ function Subscription() {
     } catch (err) {
       setResult({ success: false, message: err.message || "An error occurred." });
     } finally {
-      // --- HANYA MENAMBAHKAN INI: Mematikan loading tier ---
       setLoadingTier(null);
     }
   };
@@ -175,7 +169,6 @@ function Subscription() {
     <div style={{ backgroundColor: "#090514", minHeight: "100vh", padding: "4rem 2rem", fontFamily: "sans-serif", color: "#f3f4f6" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
         
-        {/* HEADER BRANDING */}
         <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#fff", marginBottom: "0.5rem" }}>
           Choose Your Listening Waves
         </h2>
@@ -183,7 +176,6 @@ function Subscription() {
           Unlock lossless audio, unlimited skips, and group jam sessions.
         </p>
 
-        {/* NOTIFIKASI STATUS PEMBAYARAN */}
         {result && (
           <div style={{ 
             padding: "1rem", 
@@ -199,7 +191,6 @@ function Subscription() {
           </div>
         )}
 
-        {/* RESPONSIVE PRICING GRID LAYOUT 4 KOLOM STYLE SPOTIFY (DARK MODE) */}
         <div style={{ 
           display: "grid", 
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", 
@@ -224,7 +215,6 @@ function Subscription() {
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
             >
-              {/* Lencana Recommended/Popular */}
               {plan.popular && (
                 <span style={{
                   position: "absolute",
@@ -255,7 +245,6 @@ function Subscription() {
                 {plan.desc}
               </p>
 
-              {/* TOMBOL SUBSCRIBE: --- HANYA BERUBAH DI AREA MERAH LOGIKA INI --- */}
               <button
                 onClick={() => handleSubscribe(plan.id)}
                 disabled={loadingTier !== null}
@@ -276,7 +265,6 @@ function Subscription() {
                 {loadingTier === plan.id ? "Processing..." : plan.buttonText}
               </button>
 
-              {/* LIST FITUR BENEFIT */}
               <div style={{ borderTop: "1px solid #1f1a2e", paddingTop: "1.5rem", flexGrow: 1 }}>
                 <p style={{ fontSize: "0.875rem", fontWeight: "600", color: "#a78bfa", marginBottom: "0.75rem" }}>
                   Includes:
