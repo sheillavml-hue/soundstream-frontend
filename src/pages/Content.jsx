@@ -20,12 +20,13 @@ function Content() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  // REVISI LOGIKA: Mengambil data playlist awal dari localStorage jika ada
   const [playlistContents, setPlaylistContents] = useState({
     "My Top Vibes": [],
     "Chill Study": []
   });
 
-  // TAMBAHAN FITUR: State untuk menampung lagu di Library
+  // REVISI LOGIKA: Mengambil data library awal dari localStorage jika ada
   const [libraryTracks, setLibraryTracks] = useState([]);
 
   const lastTrackIdRef = useRef(null);
@@ -78,6 +79,18 @@ function Content() {
           tier: savedTier,
           status: savedStatus
         });
+
+        // REVISI LOGIKA: Muat data Library & Playlist milik spesifik email ini dari localStorage saat app dibuka
+        const savedLibrary = localStorage.getItem(`library_${userEmail}`);
+        if (savedLibrary) setLibraryTracks(JSON.parse(savedLibrary));
+
+        const savedPlaylistContents = localStorage.getItem(`playlist_contents_${userEmail}`);
+        if (savedPlaylistContents) {
+          const parsedContents = JSON.parse(savedPlaylistContents);
+          setPlaylistContents(parsedContents);
+          setPlaylists(Object.keys(parsedContents));
+        }
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -86,6 +99,20 @@ function Content() {
     }
     initDashboard();
   }, []);
+
+  // REVISI LOGIKA: Efek otomatis menyimpan data ke LocalStorage setiap kali ada perubahan data Library
+  useEffect(() => {
+    if (userStatus?.email) {
+      localStorage.setItem(`library_${userStatus.email}`, JSON.stringify(libraryTracks));
+    }
+  }, [libraryTracks, userStatus?.email]);
+
+  // REVISI LOGIKA: Efek otomatis menyimpan data ke LocalStorage setiap kali ada perubahan data isi Playlist
+  useEffect(() => {
+    if (userStatus?.email) {
+      localStorage.setItem(`playlist_contents_${userStatus.email}`, JSON.stringify(playlistContents));
+    }
+  }, [playlistContents, userStatus?.email]);
 
   // Menghitung sisa hari kalender yang mengikat ke Email Akun
   const getRemainingDays = () => {
@@ -220,7 +247,6 @@ function Content() {
     }
   };
 
-  // TAMBAHAN FITUR: Aksi memasukkan lagu ke Library
   const handleAddToLibraryAction = (e, track) => {
     e.stopPropagation();
     if (libraryTracks.some(t => t.id === track.id)) {
@@ -294,6 +320,10 @@ function Content() {
                 localStorage.removeItem("subscription_status"); 
                 localStorage.removeItem(`subscription_expired_${userEmail}`); 
                 
+                // REVISI LOGIKA: Saat Reset Demo, hapus juga library & playlist khusus akun ini
+                localStorage.removeItem(`library_${userEmail}`);
+                localStorage.removeItem(`playlist_contents_${userEmail}`);
+                
                 const userObj = JSON.parse(localStorage.getItem("user") || "{}");
                 localStorage.setItem("user", JSON.stringify({ ...userObj, tier: "Starter" }));
                 window.location.reload(); 
@@ -355,7 +385,7 @@ function Content() {
           </div>
         )}
 
-        {/* REVISI FITUR: PANEL LIBRARY */}
+        {/* PANEL LIBRARY */}
         {activeTab === "library" && (
           <div>
             <h3 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>📚 Your Music Library</h3>
@@ -381,7 +411,7 @@ function Content() {
           </div>
         )}
 
-        {/* TAMBAHAN FITUR: PANEL PLAYLIST DETAIL DYNAMIC */}
+        {/* PANEL PLAYLIST DETAIL DYNAMIC */}
         {activeTab.startsWith("playlist-") && (() => {
           const currentPlaylistName = activeTab.replace("playlist-", "");
           const tracksInPlaylist = playlistContents[currentPlaylistName] || [];
