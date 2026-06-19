@@ -25,6 +25,9 @@ function Content() {
     "Chill Study": []
   });
 
+  // TAMBAHAN FITUR: State untuk menampung lagu di Library
+  const [libraryTracks, setLibraryTracks] = useState([]);
+
   const lastTrackIdRef = useRef(null);
   const navigate = useNavigate();
 
@@ -217,6 +220,16 @@ function Content() {
     }
   };
 
+  // TAMBAHAN FITUR: Aksi memasukkan lagu ke Library
+  const handleAddToLibraryAction = (e, track) => {
+    e.stopPropagation();
+    if (libraryTracks.some(t => t.id === track.id)) {
+      setAccessError(`Lagu "${track.title}" sudah ada di dalam Library Anda.`);
+      return;
+    }
+    setLibraryTracks(prev => [...prev, track]);
+  };
+
   const filteredCatalog = trackCatalog.filter(track => 
     track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     track.artist.toLowerCase().includes(searchQuery.toLowerCase())
@@ -236,7 +249,7 @@ function Content() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
           <div onClick={() => setActiveTab("home")} style={{ cursor: "pointer", color: activeTab === "home" ? "#a78bfa" : "#9ca3af", fontWeight: activeTab === "home" ? "bold" : "normal" }}>🏠 Home</div>
           <div onClick={() => setActiveTab("search")} style={{ cursor: "pointer", color: activeTab === "search" ? "#a78bfa" : "#9ca3af", fontWeight: activeTab === "search" ? "bold" : "normal" }}>🔍 Search</div>
-          <div onClick={() => setActiveTab("library")} style={{ cursor: "pointer", color: activeTab === "library" ? "#a78bfa" : "#9ca3af", fontWeight: activeTab === "library" ? "bold" : "normal" }}>📚 Your Library</div>
+          <div onClick={() => setActiveTab("library")} style={{ cursor: "pointer", color: activeTab === "library" ? "#a78bfa" : "#9ca3af", fontWeight: activeTab === "library" ? "bold" : "normal" }}>📚 Your Library ({libraryTracks.length})</div>
         </div>
 
         <hr style={{ borderColor: "#1f1a2e", marginBottom: "1.5rem" }} />
@@ -310,9 +323,12 @@ function Content() {
                   </div>
                   <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{track.title}</h4>
                   <p style={{ margin: "0 0 1rem 0", color: "#9ca3af", fontSize: "0.85rem" }}>{track.artist}</p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "4px", backgroundColor: "#2e1c5b", color: "#c084fc" }}>{track.requiredTier} Only</span>
-                    <button onClick={(e) => handleAddToPlaylistAction(e, track)} style={{ backgroundColor: "transparent", border: "1px solid #7c3aed", color: "#a78bfa", borderRadius: "4px", padding: "0.2rem 0.4rem", fontSize: "0.75rem", cursor: "pointer" }}>➕ Playlist</button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <span style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "4px", backgroundColor: "#2e1c5b", color: "#c084fc", textAlign: "center" }}>{track.requiredTier} Only</span>
+                    <div style={{ display: "flex", gap: "0.25rem" }}>
+                      <button onClick={(e) => handleAddToPlaylistAction(e, track)} style={{ flex: 1, backgroundColor: "transparent", border: "1px solid #7c3aed", color: "#a78bfa", borderRadius: "4px", padding: "0.2rem 0.4rem", fontSize: "0.75rem", cursor: "pointer" }}>➕ Playlist</button>
+                      <button onClick={(e) => handleAddToLibraryAction(e, track)} style={{ flex: 1, backgroundColor: "transparent", border: "1px solid #10b981", color: "#34d399", borderRadius: "4px", padding: "0.2rem 0.4rem", fontSize: "0.75rem", cursor: "pointer" }}>➕ Library</button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -339,13 +355,62 @@ function Content() {
           </div>
         )}
 
-        {/* PANEL LIBRARY */}
+        {/* REVISI FITUR: PANEL LIBRARY */}
         {activeTab === "library" && (
-          <div style={{ textAlign: "center", padding: "3rem 0" }}>
-            <span style={{ fontSize: "3rem" }}>📚</span>
-            <h3 style={{ fontSize: "1.5rem", marginTop: "1rem" }}>Your Music Library is Empty</h3>
+          <div>
+            <h3 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>📚 Your Music Library</h3>
+            {libraryTracks.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "3rem 0" }}>
+                <span style={{ fontSize: "3rem" }}>📚</span>
+                <p style={{ fontSize: "1.1rem", marginTop: "1rem", color: "#9ca3af" }}>Library Anda masih kosong. Tambahkan lagu dari halaman Home!</p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1.5rem" }}>
+                {libraryTracks.map((track) => (
+                  <div key={track.id} onClick={() => handlePlayTrack(track)} style={{ backgroundColor: "#110b21", borderRadius: "8px", padding: "1.25rem", cursor: "pointer", border: activeTrack?.id === track.id ? "2px solid #a78bfa" : "1px solid #1f1a2e" }}>
+                    <div style={{ width: "100%", height: "140px", borderRadius: "6px", marginBottom: "1rem", overflow: "hidden" }}>
+                      <img src={track.img} alt={track.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                    <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem" }}>{track.title}</h4>
+                    <p style={{ margin: "0 0 1rem 0", color: "#9ca3af", fontSize: "0.85rem" }}>{track.artist}</p>
+                    <button onClick={(e) => handleAddToPlaylistAction(e, track)} style={{ width: "100%", backgroundColor: "transparent", border: "1px solid #7c3aed", color: "#a78bfa", borderRadius: "4px", padding: "0.3rem", fontSize: "0.8rem", cursor: "pointer" }}>➕ Playlist</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
+
+        {/* TAMBAHAN FITUR: PANEL PLAYLIST DETAIL DYNAMIC */}
+        {activeTab.startsWith("playlist-") && (() => {
+          const currentPlaylistName = activeTab.replace("playlist-", "");
+          const tracksInPlaylist = playlistContents[currentPlaylistName] || [];
+          return (
+            <div>
+              <h3 style={{ fontSize: "1.5rem", marginBottom: "0.5rem", color: "#a78bfa" }}>📂 Playlist: {currentPlaylistName}</h3>
+              <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "2rem" }}>Total Lagu: {tracksInPlaylist.length}</p>
+              
+              {tracksInPlaylist.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "3rem 0", backgroundColor: "#110b21", borderRadius: "8px" }}>
+                  <span style={{ fontSize: "2.5rem" }}>📭</span>
+                  <p style={{ fontSize: "1rem", marginTop: "1rem", color: "#9ca3af" }}>Belum ada lagu di playlist ini. Masukkan lagu dari halaman Home!</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1.5rem" }}>
+                  {tracksInPlaylist.map((track) => (
+                    <div key={track.id} onClick={() => handlePlayTrack(track)} style={{ backgroundColor: "#110b21", borderRadius: "8px", padding: "1.25rem", cursor: "pointer", border: activeTrack?.id === track.id ? "2px solid #a78bfa" : "1px solid #1f1a2e" }}>
+                      <div style={{ width: "100%", height: "140px", borderRadius: "6px", marginBottom: "1rem", overflow: "hidden" }}>
+                        <img src={track.img} alt={track.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                      <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem" }}>{track.title}</h4>
+                      <p style={{ margin: "0 0 1rem 0", color: "#9ca3af", fontSize: "0.85rem" }}>{track.artist}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
       </div>
 
